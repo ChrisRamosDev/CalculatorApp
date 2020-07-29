@@ -1,47 +1,88 @@
-const test = document.querySelector('.tester');
-// DELETE ME
 
-const display = document.querySelector('.display')
-const inputs = document.querySelectorAll("button")
-let pressedInputs = [];
+let runningTotal = 0;
+let buffer = '0';
+let previousOp;
+const display = document.querySelector('.display');
+document
+  .querySelector(".calc-buttons")
+  .addEventListener('click', (event) => {
+    handleInput(event.target.innerText);
+  })
 
 
-const handleInput = (e) => {
-  let pressed;
-  
-  // Check if button pressed is a number / displays numbers
-  let numRegex = /[0-9]/;
-  if(numRegex.test(e.target.innerText)) {
-    // limits numbers pressed to fit in display
-    if(pressedInputs.length >= 9) {
-      return;
-    }
-    // stores numbers in an array as they are pressed
-    pressedInputs.push(e.target.innerText)
-    // Number constructor trims any leading zeros
-    pressed = Number(pressedInputs.join(''));
-    // displays Number on calc display
-    display.innerHTML = pressed;
+const handleInput = (value) => {
+  if(isNaN(parseInt(value))) {
+    handleSymbols(value);
+  } else {
+    handleNums(value);
   }
-
-
-  // C clears display / resets pressedInputs array
-  if(e.target.innerText === 'C') {
-    display.innerHTML = '0';
-    pressedInputs = [];
-  }
-  
-  // TODO 
-  // Store numbers for operation
-  // Operator inputs
-  // evaluating operations
-
+  rerender();
 }
 
-// adds event handlers to all button elements
-for(const input of inputs) {
-  input.addEventListener('click', handleInput);
+const handleSymbols = (input) => {
+  switch(input) {
+    case 'C':
+      buffer = '0';
+      runningTotal = 0;
+      previousOp = null;
+      break;
+    case '=':
+      if (previousOp === null) {
+        return;
+      } 
+      evaluate(parseInt(buffer));
+      previousOp = null;
+      buffer = '' + runningTotal;
+      runningTotal = 0;
+      break;
+    
+    default:
+      handleMath(input);
+      break;
+  }
 }
+
+const handleNums = (input) => {
+  if(buffer === '0') {
+    buffer = input;
+  } else {
+    buffer += input;
+  }
+}
+
+function handleMath(value) {
+  if ( buffer === '0'){
+    return;
+  }
+
+  const intBuffer = parseInt(buffer);
+  if ( runningTotal === 0 ) {
+    runningTotal = intBuffer;
+  } else {
+    evaluate(intBuffer);
+  }
+
+  previousOp = value;
+
+  buffer = '0';
+}
+
+function evaluate(intBuffer) {
+  if ( previousOp === '+') {
+    runningTotal += intBuffer;
+  } else if ( previousOp === '−') {
+    runningTotal -= intBuffer;
+  } else if ( previousOp === '×') {
+    runningTotal *= intBuffer;
+  } else {
+    runningTotal /= intBuffer;
+  }
+}
+
+function rerender() {
+  display.innerText = buffer;
+}
+
 
 // = + − × ÷
 
